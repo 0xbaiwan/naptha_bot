@@ -245,18 +245,33 @@ function install_naptha_node() {
         chmod 600 .env  # 添加权限保护
         echo ".env.example 文件已复制为 .env"
 
-        # 修改 .env 文件中的 LAUNCH_DOCKER=false 为 LAUNCH_DOCKER=true
+        # 修改 .env 文件中的配置
         sed -i 's/LAUNCH_DOCKER=false/LAUNCH_DOCKER=true/' .env
-        # 修改 .env 文件中的 HF_HOME 路径
+        
+        # 设置 HF_HOME 路径
         HF_HOME_PATH="/root/.cache/huggingface"
         if [ "$USER" != "root" ]; then
             HF_HOME_PATH="/home/$USER/.cache/huggingface"
         fi
         sed -i "s|HF_HOME=.*|HF_HOME=$HF_HOME_PATH|" .env
+        
+        # 添加 RabbitMQ 配置
+        RMQ_USER="naptha_user"
+        RMQ_PASSWORD=$(openssl rand -hex 12)  # 生成随机密码
+        
+        # 更新 RabbitMQ 相关配置
+        sed -i "s|RMQ_USER=.*|RMQ_USER=$RMQ_USER|" .env
+        sed -i "s|RMQ_PASSWORD=.*|RMQ_PASSWORD=$RMQ_PASSWORD|" .env
+        
         echo "已将 .env 文件中的 LAUNCH_DOCKER 设置为 true"
         echo "已将 .env 文件中的 HF_HOME 设置为 $HF_HOME_PATH"
+        echo "已配置 RabbitMQ 用户名和密码"
+        
+        # 保存 RabbitMQ 凭据到安全的位置
+        echo "RabbitMQ 凭据已保存，用户名: $RMQ_USER，密码: $RMQ_PASSWORD"
     else
         echo ".env.example 文件不存在，无法复制为 .env"
+        return 1
     fi
 
     # 执行 launch.sh

@@ -296,10 +296,22 @@ function view_logs() {
     
     # 进入 node 目录
     if cd node; then
-        # 使用 docker-compose 查看日志，显示最后 300 行并实时跟踪
-        docker-compose logs -f --tail=300
+        # 确保加载 .env 文件中的环境变量
+        if [ -f .env ]; then
+            # 导出环境变量
+            export $(cat .env | grep -v '^#' | xargs)
+            
+            # 使用 docker-compose 查看日志，显示最后 300 行并实时跟踪
+            docker-compose logs -f --tail=300
+            
+            # 清理环境变量
+            unset $(cat .env | grep -v '^#' | sed -E 's/(.*)=.*/\1/' | xargs)
+        else
+            echo "错误：.env 文件不存在，请先运行安装命令。"
+        fi
     else
-        echo "无法进入 node 目录，请确保 node 目录存在。"
+        echo "无法进入 node 目录，请确保已经安装了节点。"
+        echo "如果尚未安装，请先选择选项 1 进行安装。"
     fi
 
     # 提示用户按任意键返回主菜单
